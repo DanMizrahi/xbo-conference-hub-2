@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XBO Conference Hub 2026</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%); min-height: 100vh; }
+    ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// Icons as simple SVG components
+const Icon = ({ path, size = 20, color = "currentColor" }) => (
+  <svg width={size} height={size} fill="none" stroke={color} viewBox="0 0 24 24" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d={path} />
+  </svg>
+);
+
+const Icons = {
+  Calendar: () => <Icon path="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+  Users: () => <Icon path="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />,
+  Dollar: () => <Icon path="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+  MapPin: () => <Icon path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />,
+  Search: () => <Icon path="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
+  X: () => <Icon path="M6 18L18 6M6 6l12 12" />,
+  Plus: () => <Icon path="M12 4v16m8-8H4" />,
+  Edit: () => <Icon path="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />,
+  Save: () => <Icon path="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />,
+  Briefcase: () => <Icon path="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />,
+  LogOut: () => <Icon path="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
+  Grid: () => <Icon path="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />,
+  Sparkles: () => <Icon path="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
+  Alert: () => <Icon path="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
+  Plane: () => <Icon path="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />,
+  Hotel: () => <Icon path="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />,
+  Ticket: () => <Icon path="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />,
+  Receipt: () => <Icon path="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />,
+  Clock: () => <Icon path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
+  ChevronLeft: () => <Icon path="M15 19l-7-7 7-7" />,
+  ChevronRight: () => <Icon path="M9 5l7 7-7 7" />,
+};
+
+// Data
+const COLORS = ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#14b8a6', '#a855f7', '#f97316'];
+const RATES = { EUR: 1, USD: 1.08, GBP: 0.85, ILS: 4.05 };
+const genId = () => Math.random().toString(36).substr(2, 9);
+
+const TEAM = [
+  { id: "1", name: "Dan Mazrahi", role: "VP Corporate & BD", dept: "Management", username: "dan", password: "admin123", userRole: "admin" },
+  { id: "2", name: "Meirav", role: "Operations Manager", dept: "Operations", username: "meirav", password: "finance123", userRole: "finance" },
+  { id: "3", name: "Diego", role: "BD Manager", dept: "BD", username: "diego", password: "team123", userRole: "team" },
+  { id: "4", name: "Regi", role: "Sales Manager", dept: "Sales", username: "regi", password: "team123", userRole: "team" },
+  { id: "5", name: "Aleksandra", role: "Marketing Lead", dept: "Marketing", username: "aleksandra", password: "team123", userRole: "team" },
+  { id: "6", name: "JJ", role: "Operations", dept: "Operations", username: "jj", password: "team123", userRole: "team" },
+  { id: "7", name: "Lior H", role: "Business Dev", dept: "BD", username: "liorh", password: "team123", userRole: "team" },
+  { id: "8", name: "Lior A", role: "Business Dev", dept: "BD", username: "liora", password: "team123", userRole: "team" },
+  { id: "9", name: "Dor", role: "Product Manager", dept: "Product", username: "dor", password: "team123", userRole: "team" },
+  { id: "10", name: "Benedikt", role: "Business Dev", dept: "BD", username: "benedikt", password: "team123", userRole: "team" },
+  { id: "11", name: "Maria", role: "Marketing", dept: "Marketing", username: "maria", password: "team123", userRole: "team" },
+];
+
+const makeAtt = (userId, name) => ({
+  id: genId(), odI: genId(), odI: genId(), userId, name,
+  ticket: { status: "Not registered", type: "" },
+  flightOut: { status: "Not booked", flight: "", date: "", from: "", to: "" },
+  flightReturn: { status: "Not booked", flight: "", date: "", from: "", to: "" },
+  hotel: { status: "Not booked", name: "", checkIn: "", checkOut: "" }
+});
+
+const CONFERENCES = [
+  { id: "ice-2026", name: "ICE Barcelona", short: "ICE", location: "Barcelona, Spain", venue: "Fira Barcelona",
+    start: "2026-01-19", end: "2026-01-21", type: "Attendee", industry: "iGaming",
+    budget: { planned: 2940, expo: 0, travel: 809, hotel: 1665, transport: 106, perDiem: 360 },
+    attendees: [makeAtt("3", "Diego"), makeAtt("4", "Regi"), makeAtt("6", "JJ")],
+    meetings: [], color: "#06b6d4" },
+  { id: "ifx-dubai", name: "IFX Dubai", short: "IFX Dubai", location: "Dubai, UAE", venue: "World Trade Centre",
+    start: "2026-02-10", end: "2026-02-12", type: "Attendee", industry: "Forex",
+    budget: { planned: 5000, expo: 0, travel: 2000, hotel: 2000, transport: 500, perDiem: 500 },
+    attendees: [makeAtt("1", "Dan Mazrahi"), makeAtt("3", "Diego")],
+    meetings: [], color: "#f59e0b" },
+  { id: "money2020", name: "Money 2020", short: "Money2020", location: "Amsterdam, Netherlands", venue: "RAI Amsterdam",
+    start: "2026-06-02", end: "2026-06-04", type: "Exhibitor", industry: "Fintech",
+    budget: { planned: 37450, expo: 29855, travel: 1500, hotel: 4965, transport: 520, perDiem: 610 },
+    attendees: [makeAtt("9", "Dor"), makeAtt("1", "Dan Mazrahi"), makeAtt("7", "Lior H"), makeAtt("2", "Meirav")],
+    meetings: [], color: "#10b981" },
+  { id: "ifx-cy", name: "IFX Cyprus", short: "IFX CY", location: "Limassol, Cyprus", venue: "Parklane Resort",
+    start: "2026-06-16", end: "2026-06-18", type: "Exhibitor", industry: "Forex",
+    budget: { planned: 62030, expo: 57625, travel: 800, hotel: 1200, transport: 335, perDiem: 870 },
+    attendees: [makeAtt("5", "Aleksandra"), makeAtt("4", "Regi"), makeAtt("6", "JJ")],
+    meetings: [], color: "#ec4899" },
+  { id: "sbc", name: "SBC Summit", short: "SBC", location: "Lisbon, Portugal", venue: "FIL",
+    start: "2026-09-29", end: "2026-10-02", type: "Exhibitor", industry: "Sports Betting",
+    budget: { planned: 43713, expo: 34546, travel: 2530, hotel: 4032, transport: 715, perDiem: 1190 },
+    attendees: [makeAtt("1", "Dan"), makeAtt("10", "Benedikt"), makeAtt("2", "Meirav"), makeAtt("6", "JJ"), makeAtt("3", "Diego"), makeAtt("4", "Regi"), makeAtt("5", "Aleksandra")],
+    meetings: [], color: "#14b8a6" },
+  { id: "sigma", name: "SIGMA Rome", short: "SIGMA", location: "Rome, Italy", venue: "Fiera Roma",
+    start: "2026-11-02", end: "2026-11-05", type: "Exhibitor", industry: "iGaming",
+    budget: { planned: 52956, expo: 41043, travel: 2622, hotel: 5841, transport: 1290, perDiem: 1460 },
+    attendees: [makeAtt("1", "Dan"), makeAtt("3", "Diego"), makeAtt("10", "Benedikt"), makeAtt("8", "Lior A"), makeAtt("9", "Dor"), makeAtt("2", "Meirav"), makeAtt("7", "Lior H"), makeAtt("11", "Maria"), makeAtt("6", "JJ"), makeAtt("4", "Regi"), makeAtt("5", "Aleksandra")],
+    meetings: [], color: "#a855f7" },
+];
+
+// Utilities
+const fmt = (n, c = 'EUR') => ({ EUR: '€', USD: '$', GBP: '£', ILS: '₪' }[c] || '€') + Math.round(n).toLocaleString();
+const fmtDate = (s, e) => { const d1 = new Date(s), d2 = new Date(e); return `${d1.getDate()}-${d2.getDate()} ${d1.toLocaleDateString('en', { month: 'short' })}`; };
+const load = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+const save = (k, d) => { try { localStorage.setItem(k, JSON.stringify(d)); } catch {} };
+
+// UI Components
+const Card = ({ children, style, onClick }) => (
+  <div onClick={onClick} style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: 20, cursor: onClick ? 'pointer' : 'default', ...style }}>{children}</div>
+);
+
+const Button = ({ children, onClick, variant = 'primary', size = 'md', disabled, style: s = {} }) => {
+  const vars = { primary: { background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', color: 'white' }, secondary: { background: 'rgba(255,255,255,0.05)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' }, success: { background: 'rgba(16,185,129,0.15)', color: '#10b981' }, danger: { background: 'rgba(239,68,68,0.15)', color: '#ef4444' } };
+  return <button onClick={onClick} disabled={disabled} style={{ padding: size === 'sm' ? '6px 12px' : '10px 18px', borderRadius: 8, border: 'none', fontSize: size === 'sm' ? 12 : 14, fontWeight: 500, cursor: disabled ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, opacity: disabled ? 0.5 : 1, ...vars[variant], ...s }}>{children}</button>;
+};
+
+const Badge = ({ children, color = '#8b5cf6' }) => (
+  <span style={{ display: 'inline-flex', padding: '3px 8px', borderRadius: 6, background: `${color}20`, color, fontSize: 11, fontWeight: 500 }}>{children}</span>
+);
+
+const StatusBadge = ({ status }) => {
+  const colors = { 'Not registered': '#64748b', 'Registered': '#f59e0b', 'Received': '#10b981', 'Not booked': '#64748b', 'Booked': '#f59e0b', 'Confirmed': '#10b981', 'Scheduled': '#f59e0b', 'Completed': '#10b981' };
+  return <Badge color={colors[status] || '#64748b'}>{status}</Badge>;
+};
+
+const Input = ({ label, value, onChange, type = 'text', placeholder }) => (
+  <div style={{ marginBottom: 14 }}>
+    {label && <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>{label}</label>}
+    <input type={type} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+      style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'white', fontSize: 14, outline: 'none' }} />
+  </div>
+);
+
+const Select = ({ label, value, onChange, options }) => (
+  <div style={{ marginBottom: 14 }}>
+    {label && <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>{label}</label>}
+    <select value={value || ''} onChange={(e) => onChange(e.target.value)}
+      style={{ width: '100%', padding: '10px 12px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'white', fontSize: 14, outline: 'none' }}>
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  </div>
+);
+
+const Modal = ({ title, onClose, children, wide }) => (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
+    <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, width: '100%', maxWidth: wide ? 900 : 500, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ color: 'white', fontSize: 18, fontWeight: 600 }}>{title}</h2>
+        <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#94a3b8' }}><Icons.X /></button>
+      </div>
+      <div style={{ padding: 24, overflowY: 'auto', flex: 1 }}>{children}</div>
+    </div>
+  </div>
+);
+
+// Login Screen
+const LoginScreen = ({ onLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    const user = TEAM.find(m => m.username === username.toLowerCase() && m.password === password);
+    if (user) onLogin(user);
+    else setError('Invalid credentials');
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <Card style={{ maxWidth: 400, width: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', borderRadius: 16, marginBottom: 16 }}>
+            <span style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>XBO</span>
+          </div>
+          <h1 style={{ color: 'white', fontSize: 24, fontWeight: 600 }}>Conference Hub</h1>
+          <p style={{ color: '#64748b', marginTop: 8, fontSize: 14 }}>Sign in to manage conferences</p>
+        </div>
+
+        <Input label="Username" value={username} onChange={setUsername} placeholder="Enter username" />
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>Password</label>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} placeholder="••••••••"
+            style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'white', fontSize: 14, outline: 'none' }} />
+        </div>
+
+        {error && <div style={{ padding: 12, background: 'rgba(239,68,68,0.1)', borderRadius: 8, color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
+
+        <Button onClick={handleLogin} style={{ width: '100%', justifyContent: 'center' }}>Sign In</Button>
+
+        <div style={{ marginTop: 24, padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
+          <p style={{ color: '#64748b', fontSize: 12, marginBottom: 8, fontWeight: 500 }}>Demo Accounts:</p>
+          <p style={{ color: '#94a3b8', fontSize: 11 }}>Admin: dan / admin123</p>
+          <p style={{ color: '#94a3b8', fontSize: 11, marginTop: 2 }}>Finance: meirav / finance123</p>
+          <p style={{ color: '#94a3b8', fontSize: 11, marginTop: 2 }}>Team: diego / team123</p>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// Sidebar
+const Sidebar = ({ user, view, setView, onLogout }) => {
+  const menu = [
+    { id: 'dashboard', label: 'Dashboard', icon: Icons.Grid },
+    { id: 'calendar', label: 'Calendar', icon: Icons.Calendar },
+    { id: 'conferences', label: 'Conferences', icon: Icons.Briefcase },
+  ];
+  if (user.userRole === 'admin' || user.userRole === 'finance') {
+    menu.push({ id: 'budget', label: 'Budget', icon: Icons.Dollar });
+  }
+  if (user.userRole === 'admin') {
+    menu.push({ id: 'team', label: 'Team', icon: Icons.Users });
+  }
+
+  return (
+    <div style={{ position: 'fixed', left: 0, top: 0, width: 220, height: '100vh', background: 'rgba(15,23,42,0.98)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', zIndex: 50 }}>
+      <div style={{ padding: 20, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 14, fontWeight: 900, color: 'white' }}>XBO</span>
+          </div>
+          <div>
+            <h1 style={{ color: 'white', fontSize: 15, fontWeight: 600 }}>Conference Hub</h1>
+            <p style={{ color: '#64748b', fontSize: 11 }}>2026</p>
+          </div>
+        </div>
+      </div>
+
+      <nav style={{ flex: 1, padding: 12 }}>
+        {menu.map(item => (
+          <button key={item.id} onClick={() => setView(item.id)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 10, border: 'none', marginBottom: 4, cursor: 'pointer', background: view === item.id ? 'linear-gradient(90deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2))' : 'transparent', color: view === item.id ? 'white' : '#94a3b8' }}>
+            <item.icon />
+            <span style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <div style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'white', fontWeight: 600, fontSize: 12 }}>{user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ color: 'white', fontSize: 13, fontWeight: 500 }}>{user.name}</p>
+            <p style={{ color: '#64748b', fontSize: 11, textTransform: 'capitalize' }}>{user.userRole}</p>
+          </div>
+          <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 4 }}><Icons.LogOut /></button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Dashboard
+const Dashboard = ({ user, confs, currency }) => {
+  const canBudget = user.userRole === 'admin' || user.userRole === 'finance';
+  const total = confs.reduce((s, c) => s + c.budget.planned, 0) * RATES[currency];
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: canBudget ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+        {canBudget && <Card><Icons.Dollar /><p style={{ color: 'white', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{fmt(total, currency)}</p><p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Total Budget</p></Card>}
+        <Card><Icons.Briefcase /><p style={{ color: 'white', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{confs.length}</p><p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Conferences</p></Card>
+        <Card><Icons.Users /><p style={{ color: 'white', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{TEAM.length}</p><p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Team Members</p></Card>
+        <Card><Icons.Calendar /><p style={{ color: 'white', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{confs.length}</p><p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Upcoming</p></Card>
+      </div>
+
+      <Card>
+        <h3 style={{ color: 'white', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Upcoming Conferences</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {confs.sort((a, b) => new Date(a.start) - new Date(b.start)).map(conf => (
+            <div key={conf.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
+              <div style={{ width: 8, height: 40, borderRadius: 4, background: conf.color }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ color: 'white', fontWeight: 500, fontSize: 14 }}>{conf.name}</p>
+                <p style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{conf.location}</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(conf.start, conf.end)}</p>
+                <p style={{ color: '#64748b', fontSize: 11, marginTop: 2 }}>{conf.attendees.length} people</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// Conferences List
+const ConferencesList = ({ confs, currency, user, onSelect }) => {
+  const canBudget = user.userRole === 'admin' || user.userRole === 'finance';
+  
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      {confs.map(conf => (
+        <Card key={conf.id} onClick={() => onSelect(conf)} style={{ cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+            <div style={{ width: 44, height: 44, background: `${conf.color}20`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icons.Briefcase /></div>
+            <div><h3 style={{ color: 'white', fontSize: 15, fontWeight: 600 }}>{conf.name}</h3><p style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{conf.type} • {conf.industry}</p></div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#94a3b8', fontSize: 12 }}><Icons.MapPin />{conf.location}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#94a3b8', fontSize: 12 }}><Icons.Calendar />{fmtDate(conf.start, conf.end)}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#94a3b8', fontSize: 12 }}><Icons.Users />{conf.attendees.length} team</div>
+          </div>
+          {canBudget && <div style={{ paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b', fontSize: 12 }}>Budget</span><span style={{ color: 'white', fontSize: 14, fontWeight: 600 }}>{fmt(conf.budget.planned * RATES[currency], currency)}</span></div>}
+        </Card>
+      ))}
+    </div>
+  );
+};
+
+// Conference Detail
+const ConferenceDetail = ({ conf, user, onBack, onUpdate }) => {
+  const [tab, setTab] = useState('overview');
+  const [editAtt, setEditAtt] = useState(null);
+  const canBudget = user.userRole === 'admin' || user.userRole === 'finance';
+  const canEdit = user.userRole === 'admin';
+
+  const updateAtt = (attId, updates) => {
+    const newConf = { ...conf, attendees: conf.attendees.map(a => a.id === attId ? { ...a, ...updates } : a) };
+    onUpdate(newConf);
+    setEditAtt(null);
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+        <button onClick={onBack} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 10, padding: 10, cursor: 'pointer', color: 'white' }}><Icons.ChevronLeft /></button>
+        <div style={{ width: 56, height: 56, background: `${conf.color}20`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icons.Briefcase /></div>
+        <div style={{ flex: 1 }}><h1 style={{ color: 'white', fontSize: 24, fontWeight: 600 }}>{conf.name}</h1><p style={{ color: '#94a3b8', marginTop: 4 }}>{conf.location} • {fmtDate(conf.start, conf.end)}</p></div>
+        <Badge color={conf.color}>{conf.type}</Badge>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 10, marginBottom: 20 }}>
+        {['overview', 'logistics', 'meetings', ...(canBudget ? ['budget'] : [])].map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', background: tab === t ? 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2))' : 'transparent', color: tab === t ? 'white' : '#64748b', fontSize: 13, fontWeight: 500, textTransform: 'capitalize' }}>{t}</button>
+        ))}
+      </div>
+
+      {tab === 'overview' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+          <Card>
+            <h3 style={{ color: 'white', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Details</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div><p style={{ color: '#64748b', fontSize: 11 }}>VENUE</p><p style={{ color: 'white', fontSize: 14, marginTop: 4 }}>{conf.venue}</p></div>
+              <div><p style={{ color: '#64748b', fontSize: 11 }}>INDUSTRY</p><p style={{ color: 'white', fontSize: 14, marginTop: 4 }}>{conf.industry}</p></div>
+              <div><p style={{ color: '#64748b', fontSize: 11 }}>TYPE</p><p style={{ color: 'white', fontSize: 14, marginTop: 4 }}>{conf.type}</p></div>
+              <div><p style={{ color: '#64748b', fontSize: 11 }}>DATES</p><p style={{ color: 'white', fontSize: 14, marginTop: 4 }}>{fmtDate(conf.start, conf.end)}</p></div>
+            </div>
+          </Card>
+          <Card>
+            <h3 style={{ color: 'white', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Team ({conf.attendees.length})</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {conf.attendees.map(att => (
+                <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
+                  <div style={{ width: 24, height: 24, background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: 'white', fontSize: 9, fontWeight: 600 }}>{att.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span></div>
+                  <span style={{ color: 'white', fontSize: 12 }}>{att.name}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {tab === 'logistics' && (
+        <div>
+          {conf.attendees.map(att => (
+            <Card key={att.id} style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: 'white', fontWeight: 600, fontSize: 14 }}>{att.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span></div>
+                  <div><p style={{ color: 'white', fontWeight: 600 }}>{att.name}</p></div>
+                </div>
+                {canEdit && <Button variant="secondary" size="sm" onClick={() => setEditAtt(att)}><Icons.Edit /> Edit</Button>}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                <div style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}><Icons.Ticket /><span style={{ color: '#94a3b8', fontSize: 12 }}>Ticket</span></div>
+                  <StatusBadge status={att.ticket.status} />
+                </div>
+                <div style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}><Icons.Plane /><span style={{ color: '#94a3b8', fontSize: 12 }}>Flight Out</span></div>
+                  <StatusBadge status={att.flightOut.status} />
+                  {att.flightOut.flight && <p style={{ color: 'white', fontSize: 11, marginTop: 4 }}>{att.flightOut.flight}</p>}
+                </div>
+                <div style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}><Icons.Plane /><span style={{ color: '#94a3b8', fontSize: 12 }}>Return</span></div>
+                  <StatusBadge status={att.flightReturn.status} />
+                  {att.flightReturn.flight && <p style={{ color: 'white', fontSize: 11, marginTop: 4 }}>{att.flightReturn.flight}</p>}
+                </div>
+                <div style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}><Icons.Hotel /><span style={{ color: '#94a3b8', fontSize: 12 }}>Hotel</span></div>
+                  <StatusBadge status={att.hotel.status} />
+                  {att.hotel.name && <p style={{ color: 'white', fontSize: 11, marginTop: 4 }}>{att.hotel.name}</p>}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {tab === 'meetings' && (
+        <Card style={{ textAlign: 'center', padding: 40 }}>
+          <Icons.Clock />
+          <p style={{ color: '#94a3b8', marginTop: 16 }}>{conf.meetings?.length || 0} meetings scheduled</p>
+          <Button style={{ marginTop: 16 }}><Icons.Plus /> Add Meeting</Button>
+        </Card>
+      )}
+
+      {tab === 'budget' && canBudget && (
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+            <Card><p style={{ color: '#64748b', fontSize: 12 }}>Total</p><p style={{ color: 'white', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{fmt(conf.budget.planned * RATES[currency], currency)}</p></Card>
+            <Card><p style={{ color: '#64748b', fontSize: 12 }}>Expo</p><p style={{ color: '#8b5cf6', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{fmt(conf.budget.expo * RATES[currency], currency)}</p></Card>
+            <Card><p style={{ color: '#64748b', fontSize: 12 }}>Travel & Hotel</p><p style={{ color: '#06b6d4', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{fmt((conf.budget.travel + conf.budget.hotel) * RATES[currency], currency)}</p></Card>
+          </div>
+          <Card>
+            <h3 style={{ color: 'white', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Breakdown</h3>
+            {Object.entries(conf.budget).filter(([k]) => k !== 'planned').map(([key, val]) => (
+              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ color: '#94a3b8', fontSize: 13, textTransform: 'capitalize' }}>{key}</span>
+                <span style={{ color: 'white', fontSize: 14, fontWeight: 500 }}>{fmt(val * RATES[currency], currency)}</span>
+              </div>
+            ))}
+          </Card>
+        </div>
+      )}
+
+      {editAtt && (
+        <Modal title={`Logistics - ${editAtt.name}`} onClose={() => setEditAtt(null)} wide>
+          <LogisticsForm att={editAtt} onSave={(data) => updateAtt(editAtt.id, data)} onClose={() => setEditAtt(null)} />
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+// Logistics Form
+const LogisticsForm = ({ att, onSave, onClose }) => {
+  const [form, setForm] = useState({
+    ticket: { ...att.ticket },
+    flightOut: { ...att.flightOut },
+    flightReturn: { ...att.flightReturn },
+    hotel: { ...att.hotel }
+  });
+
+  const statusOpts = (type) => type === 'ticket' 
+    ? [{ value: 'Not registered', label: 'Not registered' }, { value: 'Registered', label: 'Registered' }, { value: 'Received', label: 'Received' }]
+    : [{ value: 'Not booked', label: 'Not booked' }, { value: 'Booked', label: 'Booked' }, { value: 'Confirmed', label: 'Confirmed' }];
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <Card>
+          <h4 style={{ color: 'white', fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Ticket</h4>
+          <Select label="Status" value={form.ticket.status} onChange={(v) => setForm({ ...form, ticket: { ...form.ticket, status: v } })} options={statusOpts('ticket')} />
+          <Input label="Type" value={form.ticket.type} onChange={(v) => setForm({ ...form, ticket: { ...form.ticket, type: v } })} placeholder="VIP, Exhibitor..." />
+        </Card>
+        <Card>
+          <h4 style={{ color: 'white', fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Hotel</h4>
+          <Select label="Status" value={form.hotel.status} onChange={(v) => setForm({ ...form, hotel: { ...form.hotel, status: v } })} options={statusOpts('hotel')} />
+          <Input label="Hotel Name" value={form.hotel.name} onChange={(v) => setForm({ ...form, hotel: { ...form.hotel, name: v } })} placeholder="Hilton..." />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Input label="Check In" type="date" value={form.hotel.checkIn} onChange={(v) => setForm({ ...form, hotel: { ...form.hotel, checkIn: v } })} />
+            <Input label="Check Out" type="date" value={form.hotel.checkOut} onChange={(v) => setForm({ ...form, hotel: { ...form.hotel, checkOut: v } })} />
+          </div>
+        </Card>
+        <Card>
+          <h4 style={{ color: 'white', fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Flight Out</h4>
+          <Select label="Status" value={form.flightOut.status} onChange={(v) => setForm({ ...form, flightOut: { ...form.flightOut, status: v } })} options={statusOpts('flight')} />
+          <Input label="Flight #" value={form.flightOut.flight} onChange={(v) => setForm({ ...form, flightOut: { ...form.flightOut, flight: v } })} placeholder="LH1234" />
+          <Input label="Date" type="date" value={form.flightOut.date} onChange={(v) => setForm({ ...form, flightOut: { ...form.flightOut, date: v } })} />
+        </Card>
+        <Card>
+          <h4 style={{ color: 'white', fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Flight Return</h4>
+          <Select label="Status" value={form.flightReturn.status} onChange={(v) => setForm({ ...form, flightReturn: { ...form.flightReturn, status: v } })} options={statusOpts('flight')} />
+          <Input label="Flight #" value={form.flightReturn.flight} onChange={(v) => setForm({ ...form, flightReturn: { ...form.flightReturn, flight: v } })} placeholder="LH1235" />
+          <Input label="Date" type="date" value={form.flightReturn.date} onChange={(v) => setForm({ ...form, flightReturn: { ...form.flightReturn, date: v } })} />
+        </Card>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button onClick={() => onSave(form)}><Icons.Save /> Save</Button>
+      </div>
+    </div>
+  );
+};
+
+// Calendar View
+const CalendarView = ({ confs, onSelect }) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const getConfs = (m) => confs.filter(c => new Date(c.start).getMonth() === m);
+
+  return (
+    <div>
+      <h2 style={{ color: 'white', fontSize: 24, fontWeight: 600, marginBottom: 24 }}>2026 Calendar</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        {months.map((month, idx) => {
+          const mc = getConfs(idx);
+          return (
+            <Card key={month} style={{ minHeight: 100 }}>
+              <h3 style={{ color: 'white', fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{month}</h3>
+              {mc.length === 0 ? <p style={{ color: '#64748b', fontSize: 12 }}>No events</p> : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {mc.map(c => (
+                    <div key={c.id} onClick={() => onSelect(c)} style={{ background: `${c.color}20`, borderLeft: `3px solid ${c.color}`, borderRadius: 6, padding: '5px 8px', cursor: 'pointer' }}>
+                      <p style={{ color: 'white', fontSize: 12, fontWeight: 500 }}>{c.short}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// Budget View
+const BudgetView = ({ confs, currency }) => {
+  const total = confs.reduce((s, c) => s + c.budget.planned, 0) * RATES[currency];
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+        <Card><p style={{ color: '#64748b', fontSize: 12 }}>Total Budget</p><p style={{ color: 'white', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{fmt(total, currency)}</p></Card>
+        <Card><p style={{ color: '#64748b', fontSize: 12 }}>Conferences</p><p style={{ color: 'white', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{confs.length}</p></Card>
+        <Card><p style={{ color: '#64748b', fontSize: 12 }}>Avg/Event</p><p style={{ color: 'white', fontSize: 28, fontWeight: 600, marginTop: 8 }}>{fmt(total / confs.length, currency)}</p></Card>
+      </div>
+      <Card>
+        <h3 style={{ color: 'white', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>By Conference</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <th style={{ textAlign: 'left', padding: '12px', color: '#64748b', fontSize: 12 }}>Conference</th>
+            <th style={{ textAlign: 'left', padding: '12px', color: '#64748b', fontSize: 12 }}>Date</th>
+            <th style={{ textAlign: 'right', padding: '12px', color: '#64748b', fontSize: 12 }}>Budget</th>
+          </tr></thead>
+          <tbody>
+            {confs.sort((a, b) => new Date(a.start) - new Date(b.start)).map(c => (
+              <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <td style={{ padding: '12px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 8, height: 8, borderRadius: 4, background: c.color }} /><span style={{ color: 'white', fontWeight: 500, fontSize: 13 }}>{c.short}</span></div></td>
+                <td style={{ padding: '12px', color: '#94a3b8', fontSize: 12 }}>{fmtDate(c.start, c.end)}</td>
+                <td style={{ padding: '12px', color: 'white', fontSize: 13, fontWeight: 600, textAlign: 'right' }}>{fmt(c.budget.planned * RATES[currency], currency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+};
+
+// Team View
+const TeamView = () => (
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+    {TEAM.map(member => (
+      <Card key={member.id}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'white', fontWeight: 600, fontSize: 14 }}>{member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+          </div>
+          <div>
+            <p style={{ color: 'white', fontWeight: 600, fontSize: 14 }}>{member.name}</p>
+            <p style={{ color: '#64748b', fontSize: 11, marginTop: 2 }}>{member.role}</p>
+          </div>
+        </div>
+        <Badge color={member.userRole === 'admin' ? '#ef4444' : member.userRole === 'finance' ? '#f59e0b' : '#64748b'}>{member.userRole}</Badge>
+        <p style={{ color: '#64748b', fontSize: 11, marginTop: 12 }}>{member.dept}</p>
+      </Card>
+    ))}
+  </div>
+);
+
+// Main App
+function App() {
+  const [user, setUser] = useState(null);
+  const [view, setView] = useState('dashboard');
+  const [confs, setConfs] = useState(() => load('xbo-confs', CONFERENCES));
+  const [currency, setCurrency] = useState('EUR');
+  const [selectedConf, setSelectedConf] = useState(null);
+
+  useEffect(() => { save('xbo-confs', confs); }, [confs]);
+
+  if (!user) return <LoginScreen onLogin={setUser} />;
+
+  const updateConf = (updated) => {
+    setConfs(confs.map(c => c.id === updated.id ? updated : c));
+    setSelectedConf(updated);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      <Sidebar user={user} view={view} setView={(v) => { setView(v); setSelectedConf(null); }} onLogout={() => setUser(null)} />
+      
+      <main style={{ marginLeft: 220, padding: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <div>
+            <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>{selectedConf ? selectedConf.name : view.charAt(0).toUpperCase() + view.slice(1)}</h1>
+            <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>XBO Conference Hub 2026</p>
+          </div>
+          <select value={currency} onChange={(e) => setCurrency(e.target.value)} style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'white', fontSize: 13 }}>
+            <option value="EUR">EUR €</option>
+            <option value="USD">USD $</option>
+            <option value="GBP">GBP £</option>
+            <option value="ILS">ILS ₪</option>
+          </select>
+        </div>
+
+        {view === 'dashboard' && !selectedConf && <Dashboard user={user} confs={confs} currency={currency} />}
+        {view === 'calendar' && !selectedConf && <CalendarView confs={confs} onSelect={setSelectedConf} />}
+        {view === 'conferences' && !selectedConf && <ConferencesList confs={confs} currency={currency} user={user} onSelect={setSelectedConf} />}
+        {view === 'budget' && !selectedConf && <BudgetView confs={confs} currency={currency} />}
+        {view === 'team' && !selectedConf && <TeamView />}
+        {selectedConf && <ConferenceDetail conf={selectedConf} user={user} onBack={() => setSelectedConf(null)} onUpdate={updateConf} />}
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>
